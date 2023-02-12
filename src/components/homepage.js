@@ -18,7 +18,7 @@ const Homepage = () => {
                     </span>
                 </div>
             </div>
-            <div className="flex flex-wrap w-3/4 justify-end items-start md:w-full md:h-[85vh] md:items-start">
+            <div className="flex flex-wrap w-3/4 justify-end items-start md:w-full md:h-[70vh] md:items-start">
                 <img src={Pizza} alt="" className="absolute h-[804px] w-[735px] lm:h-[600px] lm:w-[450px] lg:h-[700px] lg:w-[600px] md:h-[60vh] md:w-full" />
                 <img src={Spicy} alt="" className="absolute h-[839px] w-[752px] lm:h-[620px] lm:w-[470px] lg:h-[720px] lg:w-[620px] md:h-[62vh] md:w-full" />
                 <div className="absolute h-[15%] p-5 md:h-[30%] md:p-1">
