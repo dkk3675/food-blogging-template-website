@@ -19,8 +19,8 @@ const Homepage = () => {
                 </div>
             </div>
             <div className="flex flex-wrap w-3/4 justify-end items-start md:w-full md:h-[85vh] md:items-start">
-                <img src={Pizza} alt="" className="absolute h-[804px] w-[735px] lm:h-[600px] lm:w-[450px] lg:h-[700px] lg:w-[600px] md:h-[80vh] md:w-full" />
-                <img src={Spicy} alt="" className="absolute h-[839px] w-[752px] lm:h-[620px] lm:w-[470px] lg:h-[720px] lg:w-[620px] md:h-[82vh] md:w-full" />
+                <img src={Pizza} alt="" className="absolute h-[804px] w-[735px] lm:h-[600px] lm:w-[450px] lg:h-[700px] lg:w-[600px] md:h-[70vh] md:w-full" />
+                <img src={Spicy} alt="" className="absolute h-[839px] w-[752px] lm:h-[620px] lm:w-[470px] lg:h-[720px] lg:w-[620px] md:h-[72vh] md:w-full" />
                 <div className="absolute h-[15%] p-5 md:h-[30%] md:p-1">
                     <button className="bg-transparent text-white font-semibold text-base border-white rounded-full border-2 w-32 h-12 mt-3 mr-3 md:w-28 md:h-7 md:text-xs">Get In Touch</button>
                 </div>
