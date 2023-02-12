@@ -6,7 +6,7 @@ import Spicy from "../assets/red-spicy.png";
 const Homepage = () => {
   return (
     <div className="homepage flex flex-wrap flex-row h-[900px] lm:h-[650px] lg:h-[700px] md:flex-col-reverse md:w-full md:h-[120vh]">
-      <div className="flex flex-wrap w-1/4 flex-col md:justify-center md:w-full md:p-10 md:h-[30vh]">
+      <div className="flex flex-wrap w-1/4 flex-col md:justify-center md:w-full md:p-10 md:h-[35vh]">
         <div className="flex flex-wrap h-[20%] p-5 pl-14 md:hidden lms:hidden">
           <img src={Truck} alt="" className="h-20" />
         </div>
