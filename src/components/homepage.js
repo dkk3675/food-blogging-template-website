@@ -5,7 +5,7 @@ import Spicy from "../assets/red-spicy.png";
 
 const Homepage = () => {
   return (
-    <div className="homepage flex flex-wrap flex-row h-[900px] lm:h-[650px] lg:h-[700px] md:flex-col-reverse md:w-full md:h-[120vh]">
+    <div className="homepage flex flex-wrap flex-row h-[900px] lm:h-[650px] lg:h-[700px] md:flex-col-reverse md:w-full md:h-[100vh]">
       <div className="flex flex-wrap w-1/4 flex-col md:justify-center md:w-full md:p-10 md:h-[35vh]">
         <div className="flex flex-wrap h-[20%] p-5 pl-14 md:hidden lms:hidden">
           <img src={Truck} alt="" className="h-20" />
@@ -26,16 +26,16 @@ const Homepage = () => {
           </span>
         </div>
       </div>
-      <div className="flex flex-wrap w-3/4 justify-end items-start md:w-full md:h-[85vh] md:items-start">
+      <div className="flex flex-wrap w-3/4 justify-end items-start md:w-full md:h-[65vh] md:items-start">
         <img
           src={Pizza}
           alt=""
-          className="absolute h-[804px] w-[735px] lm:h-[600px] lm:w-[450px] lg:h-[700px] lg:w-[600px] md:h-[80vh] md:w-full"
+          className="absolute h-[804px] w-[735px] lm:h-[600px] lm:w-[450px] lg:h-[700px] lg:w-[600px] md:h-[60vh] md:w-full"
         />
         <img
           src={Spicy}
           alt=""
-          className="absolute h-[839px] w-[752px] lm:h-[620px] lm:w-[470px] lg:h-[720px] lg:w-[620px] md:h-[82vh] md:w-full"
+          className="absolute h-[839px] w-[752px] lm:h-[620px] lm:w-[470px] lg:h-[720px] lg:w-[620px] md:h-[62vh] md:w-full"
         />
         <div className="absolute h-[15%] p-5 md:h-[30%] md:p-1">
           <button className="bg-transparent text-white font-semibold text-base border-white rounded-full border-2 w-32 h-12 mt-3 mr-3 md:w-28 md:h-7 md:text-xs">
