@@ -1,20 +1,16 @@
 import React from "react";
-// import Homepage from "./components/homepage";
-// import About from "./components/about";
-// import Articles from "./components/articles";
-// import Footer from "./components/footer";
-import lab from "./assets/lab.txt"
+import Homepage from "./components/homepage";
+import About from "./components/about";
+import Articles from "./components/articles";
+import Footer from "./components/footer";
 
 function App() {
-  return(
+  return (
     <div className="App">
-      {/* <Homepage />
+      <Homepage />
       <About />
       <Articles />
-      <Footer /> */}
-      <a href={lab} download="lab.txt">
-          Download
-      </a>
+      <Footer />
     </div>
   );
 }
