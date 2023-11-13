@@ -1,0 +1,1407 @@
+---------------------Knapsack-----------------------
+
+#include<bits/stdc++.h>
+using namespace std;
+
+// Function to find the maximum of two integers
+int max(int a, int b)
+{
+    return (a > b) ? a : b;
+}
+
+// 0-1 Knapsack algorithm function
+int knapsack(int capacity, vector<int> &weights, vector<int> &values, int n)
+{
+    vector<vector<int>> dp(n + 1, vector<int>(capacity + 1, 0));
+
+    for (int i = 1; i <= n; i++)
+    {
+        for (int w = 1; w <= capacity; w++)
+        {
+            if (weights[i - 1] <= w)
+            {
+                dp[i][w] = max(values[i - 1] + dp[i - 1][w - weights[i - 1]], dp[i - 1][w]);
+            }
+            else
+            {
+                dp[i][w] = dp[i - 1][w];
+            }
+        }
+    }
+
+    return dp[n][capacity];
+}
+
+int main()
+{
+    int capacity, n;
+    cout << "Enter the knapsack capacity: ";
+    cin >> capacity;
+
+    cout << "Enter the number of items: ";
+    cin >> n;
+
+    vector<int> weights(n);
+    vector<int> values(n);
+
+    cout << "Enter the weights of items:" << endl;
+    for (int i = 0; i < n; i++)
+    {
+        cin >> weights[i];
+    }
+
+    cout << "Enter the values of items:" << endl;
+    for (int i = 0; i < n; i++)
+    {
+        cin >> values[i];
+    }
+
+    int max_value = knapsack(capacity, weights, values, n);
+    cout << "The maximum value that can be achieved is: " << max_value << endl;
+
+    return 0;
+}
+
+
+
+-------------------3 sat-----------------------------
+
+#include<bits/stdc++.h>
+using namespace std;
+
+bool isClauseSatisfied(vector<bool> &literals, vector<vector<int>> &clauses){
+    for (const auto &clause : clauses){
+        bool clauseSatisfied = false;
+        for(int literal : clause){
+            int var = abs(literal);
+            bool isNegated = (literal < 0);
+            if ((literals[var - 1] && !isNegated) || (!literals[var - 1] && isNegated)){
+                clauseSatisfied = true;
+                break;
+            }
+        }
+        if(!clauseSatisfied){
+            return false;
+        }
+    }
+    return true;
+}
+
+bool is3SatSatisfied(vector<vector<int>> &clauses, int n){
+    vector<bool> literals(n, false);
+    do{
+        if(isClauseSatisfied(literals, clauses)){
+            return true;
+        }
+    } while(next_permutation(literals.begin(), literals.end()));
+    return false;
+}
+
+// (C1 | C2 | C3) ^ (C2 | C3 | C4)..................
+
+int main(){
+    int n, m; // n = number of variables, m = number of clauses
+    cin >> n >> m;
+
+    vector<vector<int>> clauses(m);
+
+    for(int i = 0; i < m; ++i){
+        int a, b, c;
+        cin >> a >> b >> c;
+        clauses[i] = {a, b, c};
+    }
+
+    if(is3SatSatisfied(clauses, n)){
+        cout << "Satisfiable" << endl;
+    }else{
+        cout << "Not Satisfiable" << endl;
+    }
+
+    return 0;
+}
+
+
+
+
+----------------------------grahamScan----------------
+
+#include<bits/stdc++.h>
+using namespace std;
+
+struct Point{
+    int x, y;
+}p0;
+
+Point nextToTop(stack<Point> &hull){
+    Point top = hull.top();
+    hull.pop();
+    Point nextTop = hull.top();
+    hull.push(top);
+    return nextTop;
+}
+
+// Find the orientation of triplet (p, q, r)
+int orientation(Point p, Point q, Point r){
+    int val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+    if (val == 0)
+        return 0;             // Collinear
+    return (val > 0) ? 1 : 2; // Clockwise or Counterclockwise
+}
+
+// Compare function to sort points by polar angle
+bool comparePolarAngles(Point p1, Point p2){
+    int orientationVal = orientation(p0, p1, p2);
+    if (orientationVal == 0) // Collinear points, choose the farthest
+        return (p1.x * p1.x + p1.y * p1.y) < (p2.x * p2.x + p2.y * p2.y);
+    return orientationVal == 2;
+}
+
+// Returns the convex hull using Graham scan algorithm
+stack<Point> grahamScan(Point points[], int n){
+    stack<Point> hull;
+
+    // Find the point with the lowest y-coordinate (and leftmost if tied)
+    int minY = points[0].y, minIdx = 0;
+    for (int i = 1; i < n; i++){
+        int y = points[i].y;
+        if ((y < minY) || (y == minY && points[i].x < points[minIdx].x)){
+            minY = y;
+            minIdx = i;
+        }
+    }
+
+    // Place the lowest point at the beginning and sort by polar angle
+    swap(points[0], points[minIdx]);
+    p0 = points[0];
+    sort(points + 1, points + n, comparePolarAngles);
+
+    hull.push(points[0]);
+    hull.push(points[1]);
+
+    for (int i = 2; i < n; i++){
+        while (hull.size() > 1 && orientation(nextToTop(hull), hull.top(), points[i]) != 2)
+            hull.pop();
+        hull.push(points[i]);
+    }
+
+    return hull;
+}
+
+int main(){
+    Point points[] = {{0, 3}, {1, 1}, {2, 2}, {4, 4}, {0, 0}, {1, 2}, {3, 1}, {3, 3}};
+    int n = sizeof(points) / sizeof(points[0]);
+
+    stack<Point> convexHull = grahamScan(points, n);
+
+    cout << "Convex Hull using Graham Scan:\n";
+    while (!convexHull.empty()){
+        Point p = convexHull.top();
+        cout << "(" << p.x << ", " << p.y << ")\n";
+        convexHull.pop();
+    }
+    return 0;
+}
+
+
+
+----------------------------jarvisMarch
+
+#include<bits/stdc++.h>
+using namespace std;
+
+struct Point{
+    int x, y;
+};
+
+// Function to find the orientation of three points
+int orientation(Point p, Point q, Point r){
+    int val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+    if (val == 0)
+        return 0;             // Collinear
+    return (val > 0) ? 1 : 2; // Clockwise or Counterclockwise
+}
+
+// Jarvis March algorithm
+vector<Point> jarvisMarch(vector<Point> points){
+    int n = points.size();
+    if (n < 3)
+        return {}; // Convex hull not possible
+
+    int leftmost = 0;
+    for (int i = 1; i < n; i++){
+        if (points[i].x < points[leftmost].x)
+            leftmost = i;
+    }
+
+    vector<Point> hull;
+    int p = leftmost, q;
+    do{
+        hull.push_back(points[p]);
+        q = (p + 1) % n;
+        for (int i = 0; i < n; i++){
+            if (orientation(points[p], points[i], points[q]) == 2)
+                q = i;
+        }
+        p = q;
+    } while (p != leftmost);
+    return hull;
+}
+
+int main(){
+    vector<Point> points = {{0, 3}, {1, 1}, {2, 2}, {4, 4}, {0, 0}, {1, 2}, {3, 1}, {3, 3}};
+    vector<Point> convexHull = jarvisMarch(points);
+    cout << "Convex Hull using Jarvis March:\n";
+    for (auto p : convexHull){
+        cout << "(" << p.x << ", " << p.y << ")\n";
+    }
+    return 0;
+}
+
+
+-------------------------fortune
+
+import tkinter as tk
+
+import heapq
+import itertools
+
+import random
+import math
+
+
+class Point:
+    x = 0.0
+    y = 0.0
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
+class Event:
+    x = 0.0
+    p = None
+    a = None
+    valid = True
+
+    def __init__(self, x, p, a):
+        self.x = x
+        self.p = p
+        self.a = a
+        self.valid = True
+
+
+class Arc:
+    p = None
+    pprev = None
+    pnext = None
+    e = None
+    s0 = None
+    s1 = None
+
+    def __init__(self, p, a=None, b=None):
+        self.p = p
+        self.pprev = a
+        self.pnext = b
+        self.e = None
+        self.s0 = None
+        self.s1 = None
+
+
+class Segment:
+    start = None
+    end = None
+    done = False
+
+    def __init__(self, p):
+        self.start = p
+        self.end = None
+        self.done = False
+
+    def finish(self, p):
+        if self.done:
+            return
+        self.end = p
+        self.done = True
+
+
+class PriorityQueue:
+    def __init__(self):
+        self.pq = []
+        self.entry_finder = {}
+        self.counter = itertools.count()
+
+    def push(self, item):
+        # check for duplicate
+        if item in self.entry_finder:
+            return
+        count = next(self.counter)
+        # use x-coordinate as a primary key (heapq in python is min-heap)
+        entry = [item.x, count, item]
+        self.entry_finder[item] = entry
+        heapq.heappush(self.pq, entry)
+
+    def remove_entry(self, item):
+        entry = self.entry_finder.pop(item)
+        entry[-1] = 'Removed'
+
+    def pop(self):
+        while self.pq:
+            priority, count, item = heapq.heappop(self.pq)
+            if item != 'Removed':
+                del self.entry_finder[item]
+                return item
+        raise KeyError('pop from an empty priority queue')
+
+    def top(self):
+        while self.pq:
+            priority, count, item = heapq.heappop(self.pq)
+            if item != 'Removed':
+                del self.entry_finder[item]
+                self.push(item)
+                return item
+        raise KeyError('top from an empty priority queue')
+
+    def empty(self):
+        return not self.pq
+
+
+class Voronoi:
+    def __init__(self, points):
+        self.output = []  # list of line segment
+        self.arc = None  # binary tree for parabola arcs
+
+        self.points = PriorityQueue()  # site events
+        self.event = PriorityQueue()  # circle events
+
+        # bounding box
+        self.x0 = -50.0
+        self.x1 = -50.0
+        self.y0 = 550.0
+        self.y1 = 550.0
+
+        # insert points to site event
+        for pts in points:
+            point = Point(pts[0], pts[1])
+            self.points.push(point)
+            # keep track of bounding box size
+            if point.x < self.x0:
+                self.x0 = point.x
+            if point.y < self.y0:
+                self.y0 = point.y
+            if point.x > self.x1:
+                self.x1 = point.x
+            if point.y > self.y1:
+                self.y1 = point.y
+
+        # add margins to the bounding box
+        dx = (self.x1 - self.x0 + 1) / 5.0
+        dy = (self.y1 - self.y0 + 1) / 5.0
+        self.x0 = self.x0 - dx
+        self.x1 = self.x1 + dx
+        self.y0 = self.y0 - dy
+        self.y1 = self.y1 + dy
+
+    def process(self):
+        while not self.points.empty():
+            if not self.event.empty() and (self.event.top().x <= self.points.top().x):
+                self.process_event()  # handle circle event
+            else:
+                self.process_point()  # handle site event
+
+        # after all points, process remaining circle events
+        while not self.event.empty():
+            self.process_event()
+
+        self.finish_edges()
+
+    def process_point(self):
+        # get next event from site pq
+        p = self.points.pop()
+        # add new arc (parabola)
+        self.arc_insert(p)
+
+    def process_event(self):
+        # get next event from circle pq
+        e = self.event.pop()
+
+        if e.valid:
+            # start new edge
+            s = Segment(e.p)
+            self.output.append(s)
+
+            # remove associated arc (parabola)
+            a = e.a
+            if a.pprev is not None:
+                a.pprev.pnext = a.pnext
+                a.pprev.s1 = s
+            if a.pnext is not None:
+                a.pnext.pprev = a.pprev
+                a.pnext.s0 = s
+
+            # finish the edges before and after a
+            if a.s0 is not None:
+                a.s0.finish(e.p)
+            if a.s1 is not None:
+                a.s1.finish(e.p)
+
+            # recheck circle events on either side of p
+            if a.pprev is not None:
+                self.check_circle_event(a.pprev, e.x)
+            if a.pnext is not None:
+                self.check_circle_event(a.pnext, e.x)
+
+    def arc_insert(self, p):
+        if self.arc is None:
+            self.arc = Arc(p)
+        else:
+            # find the current arcs at p.y
+            i = self.arc
+            while i is not None:
+                flag, z = self.intersect(p, i)
+                if flag:
+                    # new parabola intersects arc i
+                    flag, zz = self.intersect(p, i.pnext)
+                    if (i.pnext is not None) and (not flag):
+                        i.pnext.pprev = Arc(i.p, i, i.pnext)
+                        i.pnext = i.pnext.pprev
+                    else:
+                        i.pnext = Arc(i.p, i)
+                    i.pnext.s1 = i.s1
+
+                    # add p between i and i.pnext
+                    i.pnext.pprev = Arc(p, i, i.pnext)
+                    i.pnext = i.pnext.pprev
+
+                    i = i.pnext  # now i points to the new arc
+
+                    # add new half-edges connected to i's endpoints
+                    seg = Segment(z)
+                    self.output.append(seg)
+                    i.pprev.s1 = i.s0 = seg
+
+                    seg = Segment(z)
+                    self.output.append(seg)
+                    i.pnext.s0 = i.s1 = seg
+
+                    # check for new circle events around the new arc
+                    self.check_circle_event(i, p.x)
+                    self.check_circle_event(i.pprev, p.x)
+                    self.check_circle_event(i.pnext, p.x)
+
+                    return
+
+                i = i.pnext
+
+            # if p never intersects an arc, append it to the list
+            i = self.arc
+            while i.pnext is not None:
+                i = i.pnext
+            i.pnext = Arc(p, i)
+
+            # insert new segment between p and i
+            x = self.x0
+            y = (i.pnext.p.y + i.p.y) / 2.0
+            start = Point(x, y)
+
+            seg = Segment(start)
+            i.s1 = i.pnext.s0 = seg
+            self.output.append(seg)
+
+    def check_circle_event(self, i, x0):
+        # look for a new circle event for arc i
+        if (i.e is not None) and (i.e.x != self.x0):
+            i.e.valid = False
+        i.e = None
+
+        if (i.pprev is None) or (i.pnext is None):
+            return
+
+        flag, x, o = self.circle(i.pprev.p, i.p, i.pnext.p)
+        if flag and (x > self.x0):
+            i.e = Event(x, o, i)
+            self.event.push(i.e)
+
+    def circle(self, a, b, c):
+        # check if bc is a "right turn" from ab
+        if ((b.x - a.x)*(c.y - a.y) - (c.x - a.x)*(b.y - a.y)) > 0:
+            return False, None, None
+
+        # Joseph O'Rourke, Computational Geometry in C (2nd ed.) p.189
+        A = b.x - a.x
+        B = b.y - a.y
+        C = c.x - a.x
+        D = c.y - a.y
+        E = A*(a.x + b.x) + B*(a.y + b.y)
+        F = C*(a.x + c.x) + D*(a.y + c.y)
+        G = 2*(A*(c.y - b.y) - B*(c.x - b.x))
+
+        if (G == 0):
+            return False, None, None  # Points are co-linear
+
+        # point o is the center of the circle
+        ox = 1.0 * (D*E - B*F) / G
+        oy = 1.0 * (A*F - C*E) / G
+
+        # o.x plus radius equals max x coord
+        x = ox + math.sqrt((a.x-ox)**2 + (a.y-oy)**2)
+        o = Point(ox, oy)
+
+        return True, x, o
+
+    def intersect(self, p, i):
+        # check whether a new parabola at point p intersect with arc i
+        if (i is None):
+            return False, None
+        if (i.p.x == p.x):
+            return False, None
+
+        a = 0.0
+        b = 0.0
+
+        if i.pprev is not None:
+            a = (self.intersection(i.pprev.p, i.p, 1.0*p.x)).y
+        if i.pnext is not None:
+            b = (self.intersection(i.p, i.pnext.p, 1.0*p.x)).y
+
+        if (((i.pprev is None) or (a <= p.y)) and ((i.pnext is None) or (p.y <= b))):
+            py = p.y
+            px = 1.0 * ((i.p.x)**2 + (i.p.y-py)**2 -
+                        p.x**2) / (2*i.p.x - 2*p.x)
+            res = Point(px, py)
+            return True, res
+        return False, None
+
+    def intersection(self, p0, p1, l):
+        # get the intersection of two parabolas
+        p = p0
+        if (p0.x == p1.x):
+            py = (p0.y + p1.y) / 2.0
+        elif (p1.x == l):
+            py = p1.y
+        elif (p0.x == l):
+            py = p0.y
+            p = p1
+        else:
+            # use quadratic formula
+            z0 = 2.0 * (p0.x - l)
+            z1 = 2.0 * (p1.x - l)
+
+            a = 1.0/z0 - 1.0/z1
+            b = -2.0 * (p0.y/z0 - p1.y/z1)
+            c = 1.0 * (p0.y**2 + p0.x**2 - l**2) / z0 - \
+                1.0 * (p1.y**2 + p1.x**2 - l**2) / z1
+
+            py = 1.0 * (-b-math.sqrt(b*b - 4*a*c)) / (2*a)
+
+        px = 1.0 * (p.x**2 + (p.y-py)**2 - l**2) / (2*p.x-2*l)
+        res = Point(px, py)
+        return res
+
+    def finish_edges(self):
+        l = self.x1 + (self.x1 - self.x0) + (self.y1 - self.y0)
+        i = self.arc
+        print(i)
+        while i.pnext is not None:
+            if i.s1 is not None:
+                p = self.intersection(i.p, i.pnext.p, l*2.0)
+                i.s1.finish(p)
+            i = i.pnext
+
+    def print_output(self):
+        it = 0
+        for o in self.output:
+            it = it + 1
+            p0 = o.start
+            p1 = o.end
+            print(p0.x, p0.y, p1.x, p1.y)
+
+    def get_output(self):
+        res = []
+        for o in self.output:
+            p0 = o.start
+            p1 = o.end
+            res.append((p0.x, p0.y, p1.x, p1.y))
+        return res
+
+
+class MainWindow:
+    # radius of drawn points on canvas
+    RADIUS = 3
+
+    # flag to lock the canvas when drawn
+    LOCK_FLAG = False
+
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Voronoi")
+
+        self.frmMain = tk.Frame(self.master, relief=tk.RAISED, borderwidth=1)
+        self.frmMain.pack(fill=tk.BOTH, expand=1)
+
+        self.w = tk.Canvas(self.frmMain, width=500, height=500)
+        self.w.config(background='white')
+        self.w.bind('<Double-1>', self.onDoubleClick)
+        self.w.pack()
+
+        self.frmButton = tk.Frame(self.master)
+        self.frmButton.pack()
+
+        self.btnCalculate = tk.Button(
+            self.frmButton, text='Calculate', width=25, command=self.onClickCalculate)
+        self.btnCalculate.pack(side=tk.LEFT)
+
+        self.btnClear = tk.Button(
+            self.frmButton, text='Clear', width=25, command=self.onClickClear)
+        self.btnClear.pack(side=tk.LEFT)
+
+    def onClickCalculate(self):
+        if not self.LOCK_FLAG:
+            self.LOCK_FLAG = True
+
+            pObj = self.w.find_all()
+            points = []
+            for p in pObj:
+                coord = self.w.coords(p)
+                points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS))
+
+            vp = Voronoi(points)
+            print(points)
+            vp.process()
+            lines = vp.get_output()
+            # print(lines)
+            self.drawLinesOnCanvas(lines)
+            print(lines)
+
+    def onClickClear(self):
+        self.LOCK_FLAG = False
+        self.w.delete(tk.ALL)
+
+    def onDoubleClick(self, event):
+        if not self.LOCK_FLAG:
+            self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS,
+                               event.x+self.RADIUS, event.y+self.RADIUS, fill="black")
+
+    def drawLinesOnCanvas(self, lines):
+        for l in lines:
+            self.w.create_line(l[0], l[1], l[2], l[3], fill='blue')
+
+
+def main():
+    root = tk.Tk()
+    app = MainWindow(root)
+    root.mainloop()
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+------------------------------------delauney
+
+import math
+import matplotlib.pyplot as plt
+import matplotlib.tri as mtri
+
+
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
+class Triangle:
+    def __init__(self, p1, p2, p3):
+        self.vertices = [p1, p2, p3]
+
+
+def circumcenter(p1, p2, p3):
+    d = 2 * (p1.x * (p2.y - p3.y) + p2.x *
+             (p3.y - p1.y) + p3.x * (p1.y - p2.y))
+    ux = ((p1.x**2 + p1.y**2) * (p2.y - p3.y) + (p2.x**2 + p2.y**2)
+          * (p3.y - p1.y) + (p3.x**2 + p3.y**2) * (p1.y - p2.y)) / d
+    uy = ((p1.x**2 + p1.y**2) * (p3.x - p2.x) + (p2.x**2 + p2.y**2)
+          * (p1.x - p3.x) + (p3.x**2 + p3.y**2) * (p2.x - p1.x)) / d
+    return Point(ux, uy)
+
+
+def in_circumcircle(p, t):
+    center = circumcenter(t.vertices[0], t.vertices[1], t.vertices[2])
+    radius = math.sqrt(
+        (center.x - t.vertices[0].x)**2 + (center.y - t.vertices[0].y)**2)
+    distance = math.sqrt((p.x - center.x)**2 + (p.y - center.y)**2)
+    return distance <= radius
+
+
+def delaunay_triangulation(points):
+    # Create a super-triangle that encloses all points
+    max_coord = max(max(p.x, p.y) for p in points) * 3
+    p1 = Point(0, max_coord)
+    p2 = Point(max_coord, 0)
+    p3 = Point(-max_coord, -max_coord)
+    super_triangle = Triangle(p1, p2, p3)
+
+    triangles = [super_triangle]
+
+    for p in points:
+        bad_triangles = []
+        for t in triangles:
+            if in_circumcircle(p, t):
+                bad_triangles.append(t)
+
+        polygon = []
+        for t in bad_triangles:
+            for v in t.vertices:
+                if v not in polygon:
+                    polygon.append(v)
+
+        new_triangles = []
+        for v in polygon:
+            new_triangles.append(
+                Triangle(p, v, polygon[(polygon.index(v) + 1) % len(polygon)]))
+
+        triangles = [t for t in triangles if t not in bad_triangles]
+        triangles.extend(new_triangles)
+
+    triangles = [t for t in triangles if not any(
+        v in t.vertices for v in super_triangle.vertices)]
+
+    return triangles
+
+
+def plot_delaunay(triangles, points):
+    triangulation = mtri.Triangulation(
+        [p.x for p in points], [p.y for p in points])
+
+    plt.triplot(triangulation, linewidth=0.5, color='black')
+    plt.plot([p.x for p in points], [p.y for p in points], 'o', color='red')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('Delaunay Triangulation')
+    plt.show()
+
+
+def plot_voronoi(triangles, points):
+    voronoi_points = []
+    for t in triangles:
+        center = circumcenter(t.vertices[0], t.vertices[1], t.vertices[2])
+        voronoi_points.append((center.x, center.y))
+
+    print(voronoi_points)
+    voronoi = mtri.Triangulation([p[0] for p in voronoi_points], [
+                                 p[1] for p in voronoi_points])
+
+    plt.triplot(voronoi, linewidth=0.5, color='black')
+    plt.plot([p[0] for p in voronoi_points], [p[1]
+             for p in voronoi_points], 'o', color='blue')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('Voronoi Diagram')
+    plt.show()
+
+
+# Example usage
+points = [Point(0, 0), Point(1, 0), Point(0.5, 1),
+          Point(0, -5), Point(1, -5), Point(0.5, -4),Point(0,9)]
+triangles = delaunay_triangulation(points)
+
+for t in triangles:
+    print([(p.x, p.y) for p in t.vertices])
+
+plot_delaunay(triangles, points)
+plot_voronoi(triangles, points)
+
+
+'''
+### Comparison with Fortune's Algorithm:
+
+Fortune's algorithm is a sweep-line algorithm for computing the Voronoi diagram efficiently, whereas the Delaunay Triangulation algorithm focuses on generating a triangulation that has certain geometric properties.
+
+In terms of complexity:
+- The Delaunay Triangulation algorithm typically has a worst-case time complexity of O(n log n), where n is the number of input points.
+- Fortune's algorithm for Voronoi diagram computation also has a time complexity of O(n log n), where n is the number of input points.
+
+Fortune's algorithm usually requires more intricate coding due to its sweep-line nature and handling of events, while the Delaunay Triangulation algorithm can be implemented more straightforwardly.
+'''
+
+
+--------------------time comparision delauney & fortune
+
+import time
+from delauney import delaunay_triangulation
+from fortune import Voronoi
+import matplotlib.pyplot as plt
+
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+def measure_time(algorithm_func, data):
+    start_time = time.time()
+    algorithm_func(data.copy())
+    end_time = time.time()
+    return end_time - start_time
+
+def measure_time_fortune(algorithm_func, data):
+    start_time = time.time()
+    algorithm_func(data.copy())
+    vp.process()  # Call the vp.process() method here
+    end_time = time.time()
+    return end_time - start_time
+
+if __name__ == "__main__":
+    data = [Point(0, 0), Point(1, 0), Point(0.5, 1),
+          Point(0, -5), Point(1, -5), Point(0.5, -4),Point(0,9)]
+    data_fortune = [(0, 0), (1, 0), (0.5, 1),(0, -5), (1, -5), (0.5, -4),(0,9)]
+
+    times_algorithm1 = []
+    times_algorithm2 = []
+
+    for _ in range(10):  # Run each algorithm multiple times for better average
+        times_algorithm1.append(measure_time(delaunay_triangulation, data))
+        vp = Voronoi(data_fortune)
+        times_algorithm2.append(measure_time_fortune(Voronoi,data_fortune))
+
+    avg_time_algorithm1 = sum(times_algorithm1) / len(times_algorithm1)
+    avg_time_algorithm2 = sum(times_algorithm2) / len(times_algorithm2)
+
+    print(f"Average Algorithm 1 Execution Time: {avg_time_algorithm1} seconds")
+    print(f"Average Algorithm 2 Execution Time: {avg_time_algorithm2} seconds")
+
+    plt.bar(['Algorithm 1', 'Algorithm 2'], [avg_time_algorithm1, avg_time_algorithm2])
+    plt.ylabel('Average Execution Time (seconds)')
+    plt.title('Algorithm Execution Time Comparison')
+    plt.show()
+
+
+------------------------delauney divide & conquer with time complexity comparision with normal delauney
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.tri as mtri
+
+edges = [] # container for edges
+
+def delaunay(S):
+    """Assumes S is a list of points of form (x, y).
+    Returns a list of edges that form a Delaunay triangulation of S."""
+
+    if len(S) < 2:
+        print("Must be at least two points.")
+        return
+    
+    global edges
+    edges = []
+    S = np.asarray(S, dtype=np.float64)
+    
+    # Sort points by x coordinate, y is a tiebreaker.
+    S.view(dtype=[('f0', S.dtype), ('f1', S.dtype)]).sort(order=['f0', 'f1'], axis=0)
+    
+    # Remove duplicates.
+    dupes = [i for i in range(1, len(S)) if S[i-1][0] == S[i][0] and S[i-1][1] == S[i][1]]
+    if dupes:
+        S = np.delete(S, dupes, 0)
+
+    triangulate(S)
+    edges = [e for e in edges if e.data is None]  # clean the garbage
+    return edges
+
+
+# -----------------------------------------------------------------
+# Quad edge data structure.
+
+
+class Edge:
+    """A directed edge: org -> dest.
+    When traversing edge ring: Next is CCW, Prev is CW."""
+
+    def __init__(self, org, dest):
+        self.org   = org
+        self.dest  = dest
+        self.onext = None
+        self.oprev = None
+        self.sym   = None    # symmetrical counterpart of this edge
+        self.data  = None    # can store anyting (e.g. tag), for external use
+
+    def __str__(self):
+        s = str(self.org) + ', ' + str(self.dest)
+        if self.data is None:
+            return s
+        else:
+            return s + ' ' + str(self.data)
+
+
+# -----------------------------------------------------------------
+# Main triangulation routine
+
+
+def triangulate(S):
+    """Computes the Delaunay triangulation of a point set S and returns two edges, le and re,
+    which are the counterclockwise convex hull edge out of the leftmost vertex and the clockwise
+    convex hull edge out of the rightmost vertex, respectively."""
+
+    if len(S) == 2:
+        a = make_edge(S[0], S[1])
+        return a, a.sym
+
+    elif len(S) == 3:
+        # Create edges a connecting p1 to p2 and b connecting p2 to p3.
+        p1, p2, p3 = S[0], S[1], S[2]
+        a = make_edge(p1, p2)
+        b = make_edge(p2, p3)
+        splice(a.sym, b)
+
+        # Close the triangle.
+        if right_of(p3, a):
+            connect(b, a)
+            return a, b.sym
+        elif left_of(p3, a):
+            c = connect(b, a)
+            return c.sym, c
+        else:  # the three points are collinear
+            return a, b.sym
+
+    else:
+        # Recursively subdivide S.
+        m = (len(S) + 1) // 2
+        L, R = S[:m], S[m:]
+        ldo, ldi = triangulate(L)
+        rdi, rdo = triangulate(R)
+
+        # Compute the upper common tangent of L and R.
+        while True:
+            if right_of(rdi.org, ldi):
+                ldi = ldi.sym.onext
+            elif left_of(ldi.org, rdi):
+                rdi = rdi.sym.oprev
+            else:
+                break
+
+        # Create a first cross edge base from rdi.org to ldi.org.
+        base = connect(ldi.sym, rdi)
+
+        # Adjust ldo and rdo
+        if ldi.org[0] == ldo.org[0] and ldi.org[1] == ldo.org[1]:
+            ldo = base
+        if rdi.org[0] == rdo.org[0] and rdi.org[1] == rdo.org[1]:
+            rdo = base.sym
+
+        # Merge.
+        while True:
+            # Locate the first R and L points to be encountered by the diving bubble.
+            rcand, lcand = base.sym.onext, base.oprev
+            # If both lcand and rcand are invalid, then base is the lower common tangent.
+            v_rcand, v_lcand = right_of(rcand.dest, base), right_of(lcand.dest, base)
+            if not (v_rcand or v_lcand):
+                break
+            # Delete R edges out of base.dest that fail the circle test.
+            if v_rcand:
+                while right_of(rcand.onext.dest, base) and \
+                      in_circle(base.dest, base.org, rcand.dest, rcand.onext.dest) == 1:
+                    t = rcand.onext
+                    delete_edge(rcand)
+                    rcand = t
+            # Symmetrically, delete L edges.
+            if v_lcand:
+                while right_of(lcand.oprev.dest, base) and \
+                      in_circle(base.dest, base.org, lcand.dest, lcand.oprev.dest) == 1:
+                    t = lcand.oprev
+                    delete_edge(lcand)
+                    lcand = t
+            # The next cross edge is to be connected to either lcand.dest or rcand.dest.
+            # If both are valid, then choose the appropriate one using the in_circle test.
+            if not v_rcand or \
+               (v_lcand and in_circle(rcand.dest, rcand.org, lcand.org, lcand.dest) == 1):
+                # Add cross edge base from rcand.dest to base.dest.
+                base = connect(lcand, base.sym)
+            else:
+                # Add cross edge base from base.org to lcand.dest
+                base = connect(base.sym, rcand.sym)
+
+        return ldo, rdo
+
+
+# -----------------------------------------------------------------
+# Predicates
+
+
+def in_circle(a, b, c, d):
+    """Does d lie inside of circumcircle abc?"""
+    a1, a2 = a[0]-d[0], a[1]-d[1]
+    b1, b2 = b[0]-d[0], b[1]-d[1]
+    c1, c2 = c[0]-d[0], c[1]-d[1]
+    a3, b3, c3 = a1**2 + a2**2, b1**2 + b2**2, c1**2 + c2**2
+    det = a1*b2*c3 + a2*b3*c1 + a3*b1*c2 - (a3*b2*c1 + a1*b3*c2 + a2*b1*c3)
+    return det < 0
+
+
+def right_of(p, e):
+    """Does point p lie to the right of the line of edge e?"""
+    a, b = e.org, e.dest
+    det = (a[0]-p[0]) * (b[1]-p[1]) - (a[1]-p[1]) * (b[0]-p[0])
+    return det > 0
+
+
+def left_of(p, e):
+    """Does point p lie to the left of the line of edge e?"""
+    a, b = e.org, e.dest
+    det = (a[0]-p[0]) * (b[1]-p[1]) - (a[1]-p[1]) * (b[0]-p[0])
+    return det < 0
+
+
+# -----------------------------------------------------------------
+# Topological operators
+
+
+def make_edge(org, dest):
+    """Creates a new edge. Assumes org and dest are points."""
+
+    global edges
+    e  = Edge(org, dest)
+    es = Edge(dest, org)
+    e.sym, es.sym = es, e  # make edges mutually symmetrical
+    e.onext, e.oprev = e, e
+    es.onext, es.oprev = es, es
+    edges.append(e)
+    return e
+
+
+def splice(a, b):
+    """Combines distinct edge rings / breaks the same ring in two pieces. Merging / tearing goes
+    between a and a.onext through a.org to between b and b.onext."""
+
+    if a == b:
+        print("Splicing edge with itself, ignored: {}.".format(a))
+        return
+
+    a.onext.oprev, b.onext.oprev = b, a
+    a.onext, b.onext = b.onext, a.onext
+
+
+def connect(a, b):
+    """Adds a new edge e connecting the destination of a to the origin of b, in such a way that
+    a Left = e Left = b Left after the connection is complete."""
+    e = make_edge(a.dest, b.org)
+    splice(e, a.sym.oprev)
+    splice(e.sym, b)
+    return e
+
+
+def delete_edge(e):
+    """Disconnects the edge e from the rest of the structure (this may cause the rest of the
+    structure to fall apart in two separate components)."""
+    splice(e, e.oprev)
+    splice(e.sym, e.sym.oprev)
+    e.data, e.sym.data = True, True
+
+# Plot the triangulation
+def plot_triangulation(triangulation):
+    plt.figure()
+    for edge in triangulation:
+        print(edge)
+        plt.plot([edge.org[0], edge.dest[0]], [edge.org[1], edge.dest[1]], 'b-')
+    plt.plot(points[:, 0], points[:, 1], 'ro')  # Plot the original points in red
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('Delaunay Triangulation')
+    plt.show()
+
+
+def plot_voronoi(triangulation, points):
+    voronoi_points = []
+
+    for edge in triangulation:
+        if edge.sym and not edge.data:
+            mid_x = (edge.org[0] + edge.dest[0]) / 2
+            mid_y = (edge.org[1] + edge.dest[1]) / 2
+            voronoi_points.append((mid_x, mid_y))
+
+    voronoi = mtri.Triangulation([p[0] for p in voronoi_points], [p[1] for p in voronoi_points])
+    plt.triplot(voronoi, linewidth=0.5, color='black')
+    plt.plot([p[0] for p in voronoi_points], [p[1] for p in voronoi_points], 'o', color='blue')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('Voronoi Diagram')
+    plt.show()
+
+np.random.seed(0)
+points = np.random.rand(10, 2)  # Generate 10 random points
+print(points)
+triangulation = delaunay(points)
+plot_triangulation(triangulation)
+plot_voronoi(triangulation, points)
+
+
+
+#------------------------------------ time Evaluation---------------------------------------------
+
+import time
+from delauney import delaunay_triangulation
+
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+def measure_time(algorithm_func, data):
+    start_time = time.time()
+    algorithm_func(data.copy())
+    end_time = time.time()
+    return end_time - start_time
+
+data = [Point(0, 0), Point(1, 0), Point(0.5, 1),Point(0, -5), Point(1, -5), Point(0.5, -4),Point(0,9)]
+data_divide_conquer = np.array([[0, 0], [1, 0], [0.5, 1],[0, -5], [1, -5], [0.5, -4],[0,9]])
+
+times_algorithm1 = []
+times_algorithm2 = []
+
+for _ in range(10):  # Run each algorithm multiple times for better average
+    times_algorithm1.append(measure_time(delaunay_triangulation, data))
+    times_algorithm2.append(measure_time(delaunay, data_divide_conquer))
+        
+
+avg_time_algorithm1 = sum(times_algorithm1) / len(times_algorithm1)
+avg_time_algorithm2 = sum(times_algorithm2) / len(times_algorithm2)
+
+print(f"Average Delauney Execution Time: {avg_time_algorithm1} seconds")
+print(f"Average Delauney_Divide_Conquer Execution Time: {avg_time_algorithm2} seconds")
+
+plt.bar(['Delauney', 'Delauney_Divide_Conquer'], [avg_time_algorithm1, avg_time_algorithm2])
+plt.ylabel('Average Execution Time (seconds)')
+plt.title('Algorithm Execution Time Comparison')
+plt.show()
+
+
+-------------------approximate vertex cover
+
+def approximate_vertex_cover(graph):
+    vertex_cover = set()  # Initialize an empty vertex cover set
+
+    # Create a list of all edges in the graph, sorted by their degrees
+    edges = [(u, v) for u in graph for v in graph[u]]
+    edges.sort(key=lambda edge: min(len(graph[edge[0]]), len(graph[edge[1]])))
+
+    # Iterate through the sorted edges and add their incident vertices to the cover
+    while edges:
+        u, v = edges.pop()
+        if u not in vertex_cover and v not in vertex_cover:
+            vertex_cover.add(u)
+            vertex_cover.add(v)
+
+    return vertex_cover
+
+
+# Example usage:
+graph = {
+    'A': ['B', 'C'],
+    'B': ['A', 'C', 'D'],
+    'C': ['A', 'B', 'D', 'E'],
+    'D': ['B', 'C', 'E'],
+    'E': ['C', 'D']
+}
+
+vertex_cover = approximate_vertex_cover(graph)
+print("Approximate Vertex Cover:", vertex_cover)
+
+
+---------------------------------approximate set-cover
+
+def greedy_set_cover(universe, subsets):
+    # Ensure that the universe and subsets are not empty
+    if not universe or not subsets:
+        return None  # Return None for invalid inputs
+
+    # Initialize the solution set C and the universe U
+    C = set()
+    U = set(universe)
+    
+    while U:
+        # Initialize variables to keep track of the best subset and its cost-to-benefit ratio
+        best_subset = None
+        best_ratio = float('inf')
+        
+        for subset in subsets:
+            # Ensure that each subset is a set or can be converted into a set
+            if not isinstance(subset, set):
+                subset = set(subset)
+            
+            # Calculate the uncovered elements in the current subset
+            uncovered = subset.difference(C)
+            
+            # Calculate the cost-to-benefit ratio
+            if len(uncovered) > 0:
+                ratio = len(subset) / len(uncovered)
+                
+                # Update the best subset if the current ratio is better
+                if ratio < best_ratio:
+                    best_ratio = ratio
+                    best_subset = subset
+        
+        # Ensure that the best_subset is not None
+        if best_subset is None:
+            return None  # Return None if no suitable subset is found
+        
+        # Add the elements of the best subset to the solution set C and remove them from the universe U
+        C.update(best_subset)
+        U.difference_update(best_subset)
+    
+    return C
+
+
+universe = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+subsets = [{1, 2, 3, 4}, {4, 5, 6}, {7, 8, 9, 10}, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}]
+result = greedy_set_cover(universe, subsets)
+if result is not None:
+    print("Approximation set cover:", result)
+else:
+    print("Invalid input or no cover found.")
+
+
+-----------------------------------randomised quick sort
+
+import random
+
+def partition(arr, low, high):
+    pivot = arr[high]
+    i = low - 1
+    for j in range(low, high):
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]
+    return i + 1
+
+def randomized_partition(arr, low, high):
+    random_idx = random.randint(low, high)
+    arr[random_idx], arr[high] = arr[high], arr[random_idx]
+    return partition(arr, low, high)
+
+def randomized_quick_sort(arr, low, high):
+    if low < high:
+        pivot_idx = randomized_partition(arr, low, high)
+        randomized_quick_sort(arr, low, pivot_idx - 1)
+        randomized_quick_sort(arr, pivot_idx + 1, high)
+
+# Example usage:
+arr = [12, 4, 5, 6, 7, 3, 1, 15]
+randomized_quick_sort(arr, 0, len(arr) - 1)
+print("Sorted array:", arr)
+
+
+-------------------------rabin miller prime(probably prime)
+
+import random
+
+def is_prime_miller_rabin(n):
+    if n <= 1:
+        return False
+    if n <= 3:
+        return True
+
+    # Find r and d such that n = 2^r * d + 1
+    r, d = 0, n - 1
+    while d % 2 == 0:
+        r += 1
+        d //= 2
+
+    # Witness loop
+    a = random.randint(2, n - 2)
+    x = pow(a, d, n)
+    if x == 1 or x == n - 1:
+        return True
+    return False
+
+# Example usage:
+num = 29
+if is_prime_miller_rabin(num):
+    print(f"{num} is probably prime.")
+else:
+    print(f"{num} is composite.")
+
+
+----------------------Knuth Morris Pratt(KMP)---------
+
+def build_kmp_table(pattern):
+    table = [0] * len(pattern)
+    j = 0
+
+    for i in range(1, len(pattern)):
+        while j > 0 and pattern[i] != pattern[j]:
+            j = table[j - 1]
+
+        if pattern[i] == pattern[j]:
+            j += 1
+        table[i] = j
+
+    return table
+
+def kmp_search(text, pattern):
+    if not text or not pattern:
+        return -1
+
+    text_len, pattern_len = len(text), len(pattern)
+    kmp_table = build_kmp_table(pattern)
+
+    j = 0
+    for i in range(text_len):
+        while j > 0 and text[i] != pattern[j]:
+            j = kmp_table[j - 1]
+
+        if text[i] == pattern[j]:
+            j += 1
+
+        if j == pattern_len:
+            return i - j + 1
+
+    return -1
+
+# Example usage:
+text = "Hello, this is an example text for searching."
+pattern = "example"
+result = kmp_search(text, pattern)
+if result != -1:
+    print(f"Pattern found at index {result}")
+else:
+    print("Pattern not found in the text.")
+
+
+---------------------------rabin karp ------------
+
+def rabin_karp_search(text, pattern):
+    if not text or not pattern:
+        return -1  # If either the text or pattern is empty, there's no match.
+
+    prime = 101  # A prime number for the hash function.
+    text_len, pattern_len = len(text), len(pattern)
+    pattern_hash = 0
+    text_hash = 0
+    prime_power = 1
+
+    for i in range(pattern_len):
+        prime_power = prime_power * prime
+
+    for i in range(pattern_len):
+        pattern_hash = (pattern_hash * prime + ord(pattern[i])) % prime_power
+        text_hash = (text_hash * prime + ord(text[i])) % prime_power
+
+    for i in range(text_len - pattern_len + 1):
+        if text_hash == pattern_hash:
+            if text[i:i + pattern_len] == pattern:
+                return i
+
+        if i < text_len - pattern_len:
+            text_hash = (text_hash - ord(text[i]) * prime_power) % prime_power
+            text_hash = (text_hash * prime + ord(text[i + pattern_len])) % prime_power
+
+    return -1
+
+# Example usage:
+text = "Hello, this is an example text for searching."
+pattern = "example"
+result = rabin_karp_search(text, pattern)
+if result != -1:
+    print(f"Pattern found at index {result}")
+else:
+    print("Pattern not found in the text.")
